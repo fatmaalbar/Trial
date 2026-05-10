@@ -1477,7 +1477,6 @@ function setupCTEvents(tbl){
 function exportCTCSV(id){const tbl=customTables.find(t=>t.id===id);if(!tbl)return;const csv=[tbl.columns.map(c=>c.name).join(','),...tbl.rows.map(r=>tbl.columns.map(c=>`"${(r[c.id]||'').toString().replace(/"/g,'""')}"`).join(','))].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=tbl.name.replace(/\s+/g,'_')+'.csv';a.click();}
 
 // PERMISSIONS
-const PAGES_ALL=['dashboard','orders','production','samples','qc','critical','costing','suppliers','meetings','reports','custom-tables'];
 function renderPermsView(){
   if(currentUser.role!=='admin'){document.getElementById('perms-content').innerHTML='<div class="empty"><div class="empty-icon">🔒</div><div class="empty-title">Admin only</div></div>';return;}
   const roles=ROLES_ALL.filter(r=>r!=='admin');const rh=roles.map(r=>`<th>${r}</th>`).join('');
