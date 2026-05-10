@@ -247,6 +247,34 @@ table.tbl td.c.sa .fh{display:block}
 .empty-icon{font-size:36px;margin-bottom:12px;opacity:.5}
 .empty-title{font-size:14px;font-weight:600;color:var(--text2);margin-bottom:6px}
 .empty-sub{font-size:12px;line-height:1.6}
+/* PLM */
+.plm-tbl{border-collapse:collapse;font-size:11px;min-width:100%;table-layout:fixed}
+.plm-tbl th{background:var(--bg3);font-size:9px;font-family:var(--font);font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);padding:6px 10px;position:sticky;top:0;z-index:10;text-align:left;border-bottom:1px solid var(--border2);border-right:1px solid var(--border);white-space:nowrap}
+.plm-tbl th.plm-grp{background:var(--bg4);color:var(--text3);font-size:8px;letter-spacing:.1em;text-align:center;height:16px;padding:0 8px}
+.plm-tbl td{border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:5px 10px;color:var(--text);vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plm-tbl tr:hover td{background:rgba(255,255,255,.018)}
+.plm-tbl td.plm-client{position:sticky;left:0;z-index:4;background:var(--bg2);font-weight:700;font-size:10px;border-right:1px solid var(--border2)}
+.plm-tbl tr:hover td.plm-client{background:var(--bg3)}
+.plm-tbl td.plm-ref{font-family:var(--mono);font-size:10px;color:var(--text2)}
+.plm-tbl td.plm-style{font-weight:600}
+.plm-tbl td.plm-num{font-family:var(--mono);text-align:right}
+/* ORDER NOTES */
+.on-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:8px}
+.on-hd{padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .1s;user-select:none}
+.on-hd:hover{background:var(--bg3)}
+.on-body{display:none;border-top:1px solid var(--border)}
+.on-body.open{display:flex;flex-direction:column}
+.on-note-wrap{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.on-note-section{display:flex;flex-direction:column;gap:4px}
+.on-note-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
+.on-note-ta{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-md);padding:8px 10px;font-size:12px;color:var(--text);resize:vertical;min-height:60px;transition:border-color .12s;width:100%;line-height:1.55}
+.on-note-ta:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(77,255,160,.06)}
+.on-note-ta::placeholder{color:var(--text3)}
+.on-meta{padding:8px 14px;background:var(--bg3);border-top:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--text2)}
+.on-meta-item{display:flex;align-items:center;gap:5px}
+.on-meta-label{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
+.on-saved{font-size:9px;color:var(--accent);opacity:0;transition:opacity .3s}
+.on-saved.show{opacity:1}
 </style>
 </head>
 <body>
@@ -309,6 +337,8 @@ table.tbl td.c.sa .fh{display:block}
       <button class="nb" onclick="sv('costing',this)">Costing</button>
       <button class="nb" onclick="sv('suppliers',this)">Suppliers</button>
       <button class="nb" onclick="sv('meetings',this)">Meetings</button>
+      <button class="nb" onclick="sv('order-notes',this)">📋 Order Notes</button>
+      <button class="nb" onclick="sv('plm',this)">PLM Sheet</button>
       <button class="nb" onclick="sv('reports',this)">Reports</button>
       <button class="nb" onclick="sv('custom-tables',this)">+ Tables</button>
       <button class="nb admin-only" onclick="sv('permissions',this)">Permissions</button>
@@ -485,6 +515,57 @@ table.tbl td.c.sa .fh{display:block}
         <div class="va"><button class="btn accent" onclick="openMeetModal()">+ New Meeting</button></div>
       </div>
       <div id="meet-list"></div>
+    </div>
+  </div>
+
+  <!-- ORDER NOTES -->
+  <div class="view" id="view-order-notes">
+    <div class="vs">
+      <div class="vh">
+        <div><div class="vt">Order Notes</div><div class="vsub">Per-order meeting notes, client comments and internal follow-ups — click any order to expand</div></div>
+        <div class="va">
+          <select class="tbi" id="on-filter" onchange="renderOrderNotes()" style="width:140px">
+            <option value="">All Stages</option>
+            <option>New Order</option><option>Sampling</option><option>Approved</option>
+            <option>In Production</option><option>QC</option><option>Shipped</option>
+            <option>Invoiced</option><option>On Hold</option><option>Cancelled</option>
+          </select>
+          <input class="tbi" id="on-search" placeholder="Search orders…" oninput="renderOrderNotes()" style="width:140px">
+        </div>
+      </div>
+      <div id="on-list"></div>
+    </div>
+  </div>
+
+  <!-- PLM SHEET -->
+  <div class="view" id="view-plm" style="flex-direction:column">
+    <div class="tbl-bar">
+      <span class="tbi-lbl">Client:</span>
+      <select class="tbi" id="plm-client" onchange="renderPLM()" style="width:150px">
+        <option value="">All Clients</option>
+      </select>
+      <div class="tbl-sep"></div>
+      <span class="tbi-lbl">Stage:</span>
+      <select class="tbi" id="plm-stage" onchange="renderPLM()" style="width:130px">
+        <option value="">All Stages</option>
+        <option>New Order</option><option>Sampling</option><option>Approved</option>
+        <option>In Production</option><option>QC</option><option>Shipped</option>
+        <option>Invoiced</option><option>On Hold</option><option>Cancelled</option>
+      </select>
+      <div class="tbl-sep"></div>
+      <span class="tbi-lbl">Season:</span>
+      <input class="tbi" id="plm-season" placeholder="e.g. SS26" oninput="renderPLM()" style="width:90px">
+      <div class="tbl-sep"></div>
+      <input class="tbi" id="plm-search" placeholder="Search all…" oninput="renderPLM()" style="width:140px">
+      <div class="tbl-sep"></div>
+      <button class="btn" onclick="exportPLMCSV()">⬇ Export CSV</button>
+      <span id="plm-count" style="font-size:11px;color:var(--text3);margin-left:4px"></span>
+    </div>
+    <div class="tbl-wrap" style="flex:1" id="plm-wrap">
+      <table class="plm-tbl" id="plm-table">
+        <thead id="plm-head"></thead>
+        <tbody id="plm-body"></tbody>
+      </table>
     </div>
   </div>
 
@@ -796,9 +877,9 @@ const ORDER_COLS=[
 ];
 
 // APP STATE
-let orderData={},sampleData={},qcDataArr=[],supplierData=[],meetingData=[],costData={},customTables=[];
-const saveAll=()=>{ls('fibr4_orders',orderData);ls('fibr4_samp',sampleData);ls('fibr4_qc',qcDataArr);ls('fibr4_sup',supplierData);ls('fibr4_meet',meetingData);ls('fibr4_cost',costData);ls('fibr4_ctbl',customTables);};
-const loadAll=()=>{loadUsers();loadClients();orderData=lsg('fibr4_orders')||{};sampleData=lsg('fibr4_samp')||{};qcDataArr=lsg('fibr4_qc')||[];supplierData=lsg('fibr4_sup')||defaultSuppliers();meetingData=lsg('fibr4_meet')||defaultMeetings();costData=lsg('fibr4_cost')||{};customTables=lsg('fibr4_ctbl')||[];CLIENTS.forEach(c=>{if(!orderData[c.id])orderData[c.id]=defaultOrders(c.id);});};
+let orderData={},sampleData={},qcDataArr=[],supplierData=[],meetingData=[],costData={},customTables={},orderNotes={};
+const saveAll=()=>{ls('fibr4_orders',orderData);ls('fibr4_samp',sampleData);ls('fibr4_qc',qcDataArr);ls('fibr4_sup',supplierData);ls('fibr4_meet',meetingData);ls('fibr4_cost',costData);ls('fibr4_ctbl',customTables);ls('fibr4_onotes',orderNotes);};
+const loadAll=()=>{loadUsers();loadClients();orderData=lsg('fibr4_orders')||{};sampleData=lsg('fibr4_samp')||{};qcDataArr=lsg('fibr4_qc')||[];supplierData=lsg('fibr4_sup')||defaultSuppliers();meetingData=lsg('fibr4_meet')||defaultMeetings();costData=lsg('fibr4_cost')||{};customTables=lsg('fibr4_ctbl')||[];orderNotes=lsg('fibr4_onotes')||{};CLIENTS.forEach(c=>{if(!orderData[c.id])orderData[c.id]=defaultOrders(c.id);});};
 
 function defaultOrders(cid){
   const s={
@@ -825,7 +906,7 @@ function defaultMeetings(){return[
 ];}
 
 // PERMISSIONS
-const PAGES_ALL=['dashboard','orders','production','samples','qc','critical','costing','suppliers','meetings','reports','custom-tables'];
+const PAGES_ALL=['dashboard','orders','production','samples','qc','critical','costing','suppliers','meetings','order-notes','plm','reports','custom-tables'];
 let PERMISSIONS=null;
 function defaultPermsData(){
   const p={pages:{},cols:{}};
@@ -911,8 +992,8 @@ function sv(name,btn){
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');
   document.querySelectorAll('.view').forEach(v=>{v.classList.remove('active');v.style.display='';});
   const el=document.getElementById('view-'+name);
-  if(el){el.style.display='flex';el.style.flexDirection='column';if(['orders','ctv'].includes(name))el.style.flex='1';el.classList.add('active');}
-  const R={dashboard:renderDashboard,orders:renderOrders,production:renderProduction,samples:renderSamples,qc:renderQC,critical:renderCritical,costing:renderCosting,suppliers:renderSuppliers,meetings:renderMeetings,reports:renderReports,'custom-tables':renderCustomTables,permissions:renderPermsView,team:renderTeamView};
+  if(el){el.style.display='flex';el.style.flexDirection='column';if(['orders','ctv','plm'].includes(name))el.style.flex='1';el.classList.add('active');}
+  const R={dashboard:renderDashboard,orders:renderOrders,production:renderProduction,samples:renderSamples,qc:renderQC,critical:renderCritical,costing:renderCosting,suppliers:renderSuppliers,meetings:renderMeetings,'order-notes':renderOrderNotes,plm:renderPLM,reports:renderReports,'custom-tables':renderCustomTables,permissions:renderPermsView,team:renderTeamView};
   R[name]?.();
 }
 
@@ -1475,6 +1556,168 @@ function setupCTEvents(tbl){
   });
 }
 function exportCTCSV(id){const tbl=customTables.find(t=>t.id===id);if(!tbl)return;const csv=[tbl.columns.map(c=>c.name).join(','),...tbl.rows.map(r=>tbl.columns.map(c=>`"${(r[c.id]||'').toString().replace(/"/g,'""')}"`).join(','))].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=tbl.name.replace(/\s+/g,'_')+'.csv';a.click();}
+
+// ORDER NOTES
+function getOrderNote(ordId){if(!orderNotes[ordId])orderNotes[ordId]={meeting:'',client:'',internal:'',updated:''};return orderNotes[ordId];}
+function saveOrderNote(ordId,field,val){const n=getOrderNote(ordId);n[field]=val;n.updated=new Date().toISOString();ls('fibr4_onotes',orderNotes);}
+function renderOrderNotes(){
+  const rows=orderData[currentClient.id]||[];
+  const flt=(document.getElementById('on-filter')||{}).value||'';
+  const srch=((document.getElementById('on-search')||{}).value||'').toLowerCase();
+  const filtered=rows.filter(r=>{
+    if(flt&&r.stage!==flt)return false;
+    if(srch&&!`${r.client_ref} ${r.internal_ref} ${r.style_name} ${r.factory}`.toLowerCase().includes(srch))return false;
+    return true;
+  });
+  if(!filtered.length){document.getElementById('on-list').innerHTML='<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No orders match</div></div>';return;}
+  document.getElementById('on-list').innerHTML=filtered.map(row=>{
+    const n=getOrderNote(row.id);
+    const hasNotes=n.meeting||n.client||n.internal;
+    const updStr=n.updated?`<span style="font-size:9px;color:var(--text3)">Last updated: ${new Date(n.updated).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'})}</span>`:'';
+    return`<div class="on-card">
+      <div class="on-hd" onclick="toggleOnBody('${row.id}')">
+        <span class="chip ${cChip(row.stage)}">${row.stage}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(row.style_name||'—')}</div>
+          <div style="font-size:10px;color:var(--text3);display:flex;gap:10px;margin-top:1px">
+            <span style="font-family:var(--mono)">${esc(row.client_ref)}</span>
+            ${row.colorway?`<span>${esc(row.colorway)}</span>`:''}
+            ${row.factory?`<span>🏭 ${esc(row.factory)}</span>`:''}
+            ${row.ship_date?`<span>🚢 ${fmtD(row.ship_date)}</span>`:''}
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+          ${hasNotes?`<span style="font-size:9px;padding:2px 7px;border-radius:99px;background:var(--accent-dim);color:var(--accent);border:1px solid rgba(77,255,160,.2)">has notes</span>`:''}
+          ${updStr}
+          <span style="color:var(--text3);font-size:10px" id="on-arr-${row.id}">▼</span>
+        </div>
+      </div>
+      <div class="on-body" id="on-body-${row.id}">
+        <div class="on-note-wrap">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+            <div class="on-note-section">
+              <div class="on-note-label">📝 Meeting / Follow-up Notes</div>
+              <textarea class="on-note-ta" id="on-meet-${row.id}" placeholder="Meeting outcomes, action items, decisions…" onchange="saveOrderNote('${row.id}','meeting',this.value)" oninput="showSaved('${row.id}')">${esc(n.meeting)}</textarea>
+            </div>
+            <div class="on-note-section">
+              <div class="on-note-label">💬 Client Comments</div>
+              <textarea class="on-note-ta" id="on-cli-${row.id}" placeholder="Client feedback, requests, approvals…" onchange="saveOrderNote('${row.id}','client',this.value)" oninput="showSaved('${row.id}')">${esc(n.client)}</textarea>
+            </div>
+            <div class="on-note-section">
+              <div class="on-note-label">🔒 Internal Notes</div>
+              <textarea class="on-note-ta" id="on-int-${row.id}" placeholder="Internal flags, risk notes, issues…" onchange="saveOrderNote('${row.id}','internal',this.value)" oninput="showSaved('${row.id}')">${esc(n.internal)}</textarea>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:4px">
+            <span class="on-saved" id="on-saved-${row.id}">✓ Saved</span>
+          </div>
+        </div>
+        <div class="on-meta">
+          <div class="on-meta-item"><span class="on-meta-label">Qty</span><span style="font-family:var(--mono)">${row.order_qty?parseInt(row.order_qty).toLocaleString():'—'}</span></div>
+          <div class="on-meta-item"><span class="on-meta-label">Factory</span><span>${esc(row.factory||'—')}</span></div>
+          <div class="on-meta-item"><span class="on-meta-label">Fabric</span><span>${esc(row.fabric_status||'—')}</span></div>
+          <div class="on-meta-item"><span class="on-meta-label">Trims</span><span>${esc(row.trim_status||'—')}</span></div>
+          <div class="on-meta-item"><span class="on-meta-label">Ship Date</span><span>${fmtD(row.ship_date)||'—'}</span></div>
+          <div class="on-meta-item"><span class="on-meta-label">QC</span><span class="chip ${cChip(row.qc_status)}" style="font-size:9px">${esc(row.qc_status||'—')}</span></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+let _onSaveTimers={};
+function showSaved(ordId){clearTimeout(_onSaveTimers[ordId]);const el=document.getElementById('on-saved-'+ordId);if(el){el.classList.add('show');_onSaveTimers[ordId]=setTimeout(()=>el.classList.remove('show'),2000);}}
+function toggleOnBody(ordId){
+  const body=document.getElementById('on-body-'+ordId);const arr=document.getElementById('on-arr-'+ordId);
+  if(!body)return;const open=body.classList.toggle('open');if(arr)arr.textContent=open?'▲':'▼';
+}
+
+// PLM SHEET
+const PLM_COLS=[
+  {key:'_client',  label:'Client',      group:'Identity', w:110},
+  {key:'client_ref',label:'Client Ref', group:'Identity', w:100},
+  {key:'internal_ref',label:'Int. Ref', group:'Identity', w:90},
+  {key:'style_name',label:'Style',      group:'Identity', w:150},
+  {key:'category', label:'Category',    group:'Identity', w:90},
+  {key:'colorway', label:'Colorway',    group:'Identity', w:100},
+  {key:'season',   label:'Season',      group:'Identity', w:70},
+  {key:'size_range',label:'Sizes',      group:'Identity', w:90},
+  {key:'stage',    label:'Stage',       group:'Status',   w:110},
+  {key:'qc_status',label:'QC',          group:'Status',   w:80},
+  {key:'fabric_status',label:'Fabric',  group:'Status',   w:80},
+  {key:'trim_status',label:'Trims',     group:'Status',   w:70},
+  {key:'order_qty',label:'Order Qty',   group:'Quantities',w:80},
+  {key:'confirmed_qty',label:'Conf.',   group:'Quantities',w:70},
+  {key:'cut_qty',  label:'Cut',         group:'Quantities',w:65},
+  {key:'packed_qty',label:'Packed',     group:'Quantities',w:70},
+  {key:'shipped_qty',label:'Shipped',   group:'Quantities',w:70},
+  {key:'factory',  label:'Factory',     group:'Production',w:120},
+  {key:'country_mfg',label:'Country',   group:'Production',w:90},
+  {key:'order_date',label:'Order Date', group:'Dates',    w:90},
+  {key:'sample_eta',label:'Sample ETA', group:'Dates',    w:90},
+  {key:'bulk_date',label:'Bulk Cut',    group:'Dates',    w:90},
+  {key:'ship_date',label:'Ship Date',   group:'Dates',    w:90},
+  {key:'actual_ship',label:'Actual Ship',group:'Dates',   w:90},
+  {key:'cmt_price',label:'CMT Price',   group:'Commercial',w:80},
+  {key:'currency', label:'Ccy',         group:'Commercial',w:55},
+  {key:'total_value',label:'Total Val', group:'Commercial',w:85},
+  {key:'invoice_ref',label:'Invoice',   group:'Commercial',w:90},
+  {key:'certifications',label:'Certs',  group:'Quality',  w:110},
+  {key:'aql_level',label:'AQL',         group:'Quality',  w:55},
+  {key:'notes',    label:'Notes',       group:'Notes',    w:180},
+];
+function renderPLM(){
+  const sel=document.getElementById('plm-client');
+  if(sel.options.length<=1){CLIENTS.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;sel.appendChild(o);});}
+  const cFlt=sel.value;const sFlt=document.getElementById('plm-stage').value;
+  const seaFlt=(document.getElementById('plm-season').value||'').toLowerCase().trim();
+  const srch=(document.getElementById('plm-search').value||'').toLowerCase();
+  const td=todayDate();
+  let allRows=[];
+  CLIENTS.forEach(c=>{
+    if(cFlt&&c.id!==cFlt)return;
+    (orderData[c.id]||[]).forEach(r=>{allRows.push({...r,_client:c.name,_clientColor:c.color,_clientId:c.id});});
+  });
+  if(sFlt)allRows=allRows.filter(r=>r.stage===sFlt);
+  if(seaFlt)allRows=allRows.filter(r=>(r.season||'').toLowerCase().includes(seaFlt));
+  if(srch)allRows=allRows.filter(r=>PLM_COLS.map(c=>String(r[c.key]||'')).join(' ').toLowerCase().includes(srch));
+  document.getElementById('plm-count').textContent=`${allRows.length} orders`;
+  const groups={};PLM_COLS.forEach(c=>{groups[c.group]=(groups[c.group]||0)+1;});
+  const seen=new Set();let gRow='<tr class="gh">';
+  PLM_COLS.forEach(c=>{if(!seen.has(c.group)){gRow+=`<th class="plm-grp" colspan="${groups[c.group]}">${c.group}</th>`;seen.add(c.group);}});gRow+='</tr>';
+  let hRow='<tr>';PLM_COLS.forEach(c=>{hRow+=`<th style="width:${c.w}px;min-width:${c.w}px">${c.label}</th>`;});hRow+='</tr>';
+  document.getElementById('plm-head').innerHTML=gRow+hRow;
+  if(!allRows.length){document.getElementById('plm-body').innerHTML=`<tr><td colspan="${PLM_COLS.length}" style="text-align:center;padding:48px;color:var(--text3)">No orders match the current filters.</td></tr>`;return;}
+  const isOv=(r)=>r.ship_date&&new Date(r.ship_date+'T00:00')<td&&!['Shipped','Invoiced','Cancelled'].includes(r.stage);
+  document.getElementById('plm-body').innerHTML=allRows.map(r=>{
+    const ov=isOv(r);
+    return'<tr style="'+(ov?'background:rgba(255,80,96,.03)':'')+'">'+PLM_COLS.map(c=>{
+      const v=r[c.key]??'';
+      if(c.key==='_client')return`<td class="plm-client" title="${esc(r._client)}"><div style="display:flex;align-items:center;gap:5px"><div style="width:6px;height:6px;border-radius:50%;background:${r._clientColor};flex-shrink:0"></div>${esc(r._client)}</div></td>`;
+      if(c.key==='stage')return`<td style="width:${c.w}px"><span class="chip ${cChip(v)}">${esc(v)}</span></td>`;
+      if(c.key==='qc_status')return`<td style="width:${c.w}px"><span class="chip ${cChip(v)}" style="font-size:9px">${esc(v)}</span></td>`;
+      if(c.key==='client_ref')return`<td class="plm-ref" style="width:${c.w}px${ov?';color:var(--red)':''}">${esc(v)}</td>`;
+      if(c.key==='style_name')return`<td class="plm-style" style="width:${c.w}px">${esc(v)}</td>`;
+      if(['order_qty','confirmed_qty','cut_qty','packed_qty','shipped_qty'].includes(c.key))return`<td class="plm-num" style="width:${c.w}px">${v?parseInt(v).toLocaleString():''}</td>`;
+      if(['cmt_price','total_value'].includes(c.key))return`<td class="plm-num" style="width:${c.w}px">${v?parseFloat(v).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2}):''}</td>`;
+      if(['order_date','sample_eta','bulk_date','ship_date','actual_ship'].includes(c.key))return`<td style="width:${c.w}px;color:${c.key==='ship_date'&&ov?'var(--red)':'var(--text2)'}">${fmtD(v)}</td>`;
+      if(['fabric_status','trim_status'].includes(c.key)){const fc={Pending:'var(--text3)',Ordered:'var(--gold)',Received:'var(--green)',Cut:'var(--accent)',Issued:'var(--blue)','In Transit':'var(--orange)'};return`<td style="width:${c.w}px;color:${fc[v]||'var(--text2)'};font-weight:600">${esc(v)}</td>`;}
+      return`<td style="width:${c.w}px">${esc(v)}</td>`;
+    }).join('')+'</tr>';
+  }).join('');
+}
+function exportPLMCSV(){
+  const cFlt=document.getElementById('plm-client').value;
+  const sFlt=document.getElementById('plm-stage').value;
+  const seaFlt=(document.getElementById('plm-season').value||'').toLowerCase();
+  const srch=(document.getElementById('plm-search').value||'').toLowerCase();
+  let allRows=[];
+  CLIENTS.forEach(c=>{if(cFlt&&c.id!==cFlt)return;(orderData[c.id]||[]).forEach(r=>{allRows.push({...r,_client:c.name});});});
+  if(sFlt)allRows=allRows.filter(r=>r.stage===sFlt);
+  if(seaFlt)allRows=allRows.filter(r=>(r.season||'').toLowerCase().includes(seaFlt));
+  if(srch)allRows=allRows.filter(r=>PLM_COLS.map(c=>String(r[c.key]||'')).join(' ').toLowerCase().includes(srch));
+  const csv=[PLM_COLS.map(c=>c.label).join(','),...allRows.map(r=>PLM_COLS.map(c=>`"${String(r[c.key]??'').replace(/"/g,'""')}"`).join(','))].join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='PLM_Sheet.csv';a.click();notify('PLM exported','ok');
+}
 
 // PERMISSIONS
 function renderPermsView(){
